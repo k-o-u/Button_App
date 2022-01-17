@@ -5,6 +5,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -14,15 +17,22 @@ import java.util.List;
 import java.util.Random;
 
 public class GameActivity extends AppCompatActivity {
-    TextView mMainText;
-    Button[] mBtList = new Button[9];
-    List<Integer> mQuestionList = new ArrayList<>();
+    private TextView mMainText;
+    private Button[] mBtList = new Button[9];
+    private List<Integer> mQuestionList = new ArrayList<>();
     private boolean startQuestion = false;
+    private int mCount = 4;
+
+    private HandlerThread mHandlerThread;
+    private Handler mHandler;
+
+    private Runnable runnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+        mMainText = findViewById(R.id.textView);
 
         int[] btId = {
                 R.id.button1,
@@ -44,26 +54,54 @@ public class GameActivity extends AppCompatActivity {
         // 全ボタンを無効化
         setButtonDisable(mBtList);
 
+        // HandlerThread開始
+//        mHandlerThread = new HandlerThread("");
+//        mHandlerThread.start();
+
         // スタートまでカウントダウン
-        mMainText = findViewById(R.id.textView);
-        startCount();
+//        mHandler = new Handler(mHandlerThread.getLooper());
+        mHandler = new Handler(Looper.getMainLooper());
+        runnable = new Runnable() {
+            @Override
+            public void run() {
+                mCount--;
+                mMainText.setText(String.valueOf(mCount));
+                mHandler.postDelayed(this, 1000);
+
+                if (mCount == 0) {
+                    mMainText.setText("START!!");
+                    mHandler.removeCallbacks(runnable);
+                }
+            }
+        };
+        mHandler.post(runnable);
+
+
+
+//        handler.post(new Runnable() {
+//            @Override
+//            public void run() {
+//                startCount();
+////                mMainText.setText("Test");
+//            }
+//        });
 
         // 正解数
         int answer = 0;
 
-        while(true) {
-            while(startQuestion) {
-                // 出題
-                askQuestion(answer+1);
-
-                // 回答
-
-                // 間違えた場合その時点で結果表示
-
-                answer++;
-                break;
-            }
-        }
+//        while(true) {
+//            while(startQuestion) {
+//                // 出題
+//                askQuestion(answer+1);
+//
+//                // 回答
+//
+//                // 間違えた場合その時点で結果表示
+//
+//                answer++;
+//                break;
+//            }
+//        }
 
     }
 
@@ -91,15 +129,34 @@ public class GameActivity extends AppCompatActivity {
 
     // ゲーム開始までのカウントダウン
     private void startCount() {
-        // 3秒 = 3000 msec
-        long countNumber = 3000;
-        // インターバル msec
-        long interval = 1000;
+        int count = 3;
 
-        // タイマー生成
-        final CountDown countDown = new CountDown(countNumber, interval);
-        // カウントダウン開始
-        countDown.start();
+        while (true) {
+            mMainText.setText(String.valueOf(--count));
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+
+            }
+
+            if (count == 0) {
+                mMainText.setText("");
+                break;
+            }
+        }
+
+
+
+//        // 3秒 = 3000 msec
+//        long countNumber = 3000;
+//        // インターバル msec
+//        long interval = 1000;
+//
+//        // タイマー生成
+//        final CountDown countDown = new CountDown(countNumber, interval);
+//        // カウントダウン開始
+//        countDown.start();
     }
 
     // 出題
