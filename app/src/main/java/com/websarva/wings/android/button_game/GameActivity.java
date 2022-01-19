@@ -22,6 +22,8 @@ public class GameActivity extends AppCompatActivity {
     private List<Integer> mQuestionList = new ArrayList<>();
     private boolean startQuestion = false;
     private int mCount = 4;
+    // 正解数
+    private int mAnswer = 0;
 
     private HandlerThread mHandlerThread;
     private Handler mHandler;
@@ -51,15 +53,12 @@ public class GameActivity extends AppCompatActivity {
             mBtList[i] = findViewById(btId[i]);
         }
 
+        Question question = new Question();
+
         // 全ボタンを無効化
         setButtonDisable(mBtList);
 
-        // HandlerThread開始
-//        mHandlerThread = new HandlerThread("");
-//        mHandlerThread.start();
-
         // スタートまでカウントダウン
-//        mHandler = new Handler(mHandlerThread.getLooper());
         mHandler = new Handler(Looper.getMainLooper());
         runnable = new Runnable() {
             @Override
@@ -69,40 +68,14 @@ public class GameActivity extends AppCompatActivity {
                 mHandler.postDelayed(this, 1000);
 
                 if (mCount == 0) {
-                    mMainText.setText("START!!");
+                    mMainText.setText("");
                     mHandler.removeCallbacks(runnable);
+                    // 出題
+                    question.start();
                 }
             }
         };
         mHandler.post(runnable);
-
-
-
-//        handler.post(new Runnable() {
-//            @Override
-//            public void run() {
-//                startCount();
-////                mMainText.setText("Test");
-//            }
-//        });
-
-        // 正解数
-        int answer = 0;
-
-//        while(true) {
-//            while(startQuestion) {
-//                // 出題
-//                askQuestion(answer+1);
-//
-//                // 回答
-//
-//                // 間違えた場合その時点で結果表示
-//
-//                answer++;
-//                break;
-//            }
-//        }
-
     }
 
     public void onClick(View view) {
@@ -127,47 +100,9 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
-    // ゲーム開始までのカウントダウン
-    private void startCount() {
-        int count = 3;
-
-        while (true) {
-            mMainText.setText(String.valueOf(--count));
-
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-
-            }
-
-            if (count == 0) {
-                mMainText.setText("");
-                break;
-            }
-        }
-
-
-
-//        // 3秒 = 3000 msec
-//        long countNumber = 3000;
-//        // インターバル msec
-//        long interval = 1000;
-//
-//        // タイマー生成
-//        final CountDown countDown = new CountDown(countNumber, interval);
-//        // カウントダウン開始
-//        countDown.start();
-    }
-
     // 出題
     private void askQuestion(int questionNum) {
-        // 出題時間は 問題数*1秒
-        long countNumber = questionNum * 1000 + 300;
-        // ボタンの光る時間・消える時間は0.5秒
-        long interval = 500;
 
-        final Question question = new Question(countNumber, interval);
-        question.start();
     }
 
     public void onChange(View view) {
@@ -184,59 +119,38 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
-    class CountDown extends CountDownTimer {
-        private int mCount = 3;
-
-        CountDown(long millisInFuture, long countDownInterval) {
-            super(millisInFuture, countDownInterval);
-        }
-
-        @Override
-        public void onFinish() {
-            // 完了
-            mMainText.setText("");
-            startQuestion = true;
-        }
-
-        // インターバルで呼ばれる
-        @Override
-        public void onTick(long millisUntilFinished) {
-            mMainText.setText(String.valueOf(mCount--));
-        }
-    }
-
     // 問題を出題
-    class Question extends CountDownTimer {
-        // onTickを呼び出した回数
-        private int mCountOnTick = 0;
+    class Question {
         // 点灯中のボタンを記憶
-        private int lightButton;
+        private int activeButton;
 
-        Question(long millisInFuture, long countDownInterval) {
-            super(millisInFuture, countDownInterval);
+        public void start() {
+            lightButton();
+
+            mMainText.setText("回答してください");
         }
 
-        @Override
-        public void onFinish() {
+        private void lightButton() {
+            Random random = new Random();
+            activeButton = random.nextInt(9);
 
+            mBtList[activeButton].setBackgroundColor(Color.parseColor("#99CCFF"));
         }
-
         // インターバルで呼ばれる
-        @Override
-        public void onTick(long millisUntilFinished) {
-            // 奇数回目の場合はボタンを点灯
-            // 偶数回目の場合はボタンを消灯
-            if (mCountOnTick % 2 != 0) {
-                Random random = new Random();
-                lightButton = random.nextInt(9);
-
-                mBtList[lightButton].setBackgroundColor(Color.parseColor("#99CCFF"));
-            } else {
-                mBtList[lightButton].setBackgroundResource(R.drawable.button_style);
-            }
-
-            mCountOnTick++;
+//        @Override
+//        public void onTick(long millisUntilFinished) {
+//            // 奇数回目の場合はボタンを点灯
+//            // 偶数回目の場合はボタンを消灯
+//            if (mCountOnTick % 2 != 0) {
+//                Random random = new Random();
+//                lightButton = random.nextInt(9);
+//
+//                mBtList[lightButton].setBackgroundColor(Color.parseColor("#99CCFF"));
+//            } else {
+//                mBtList[lightButton].setBackgroundResource(R.drawable.button_style);
+//            }
+//
+//            mCountOnTick++;
 //            mMainText.setText(mCountOnTick);
-        }
     }
 }
