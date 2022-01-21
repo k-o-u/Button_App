@@ -24,11 +24,15 @@ public class GameActivity extends AppCompatActivity {
     private int mCount = 4;
     // 正解数
     private int mAnswer = 0;
+    // 点灯しているボタンを記憶
+    private int mActiveButton;
 
     private HandlerThread mHandlerThread;
     private Handler mHandler;
 
     private Runnable runnable;
+
+    Random random = new Random();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,10 +57,10 @@ public class GameActivity extends AppCompatActivity {
             mBtList[i] = findViewById(btId[i]);
         }
 
-        Question question = new Question();
-
         // 全ボタンを無効化
         setButtonDisable(mBtList);
+
+        Question question = new Question();
 
         // スタートまでカウントダウン
         mHandler = new Handler(Looper.getMainLooper());
@@ -71,7 +75,7 @@ public class GameActivity extends AppCompatActivity {
                     mMainText.setText("");
                     mHandler.removeCallbacks(runnable);
                     // 出題
-                    question.start();
+                    question.startQuestion();
                 }
             }
         };
@@ -119,38 +123,41 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
-    // 問題を出題
     class Question {
-        // 点灯中のボタンを記憶
-        private int activeButton;
+//        private int mQuestionNum = mAnswer;
+        private int mQuestionNum = 3;
 
-        public void start() {
-            lightButton();
+        public void startQuestion() {
+            mHandler.post(buttonOnRunnable);
+        }
 
+        public void answerQuestion() {
             mMainText.setText("回答してください");
+            setButtonEnable(mBtList);
         }
 
-        private void lightButton() {
-            Random random = new Random();
-            activeButton = random.nextInt(9);
+        Runnable buttonOnRunnable = new Runnable() {
+            @Override
+            public void run() {
+                mActiveButton = random.nextInt(9);
+                mBtList[mActiveButton].setBackgroundColor(Color.parseColor("#99CCFF"));
 
-            mBtList[activeButton].setBackgroundColor(Color.parseColor("#99CCFF"));
-        }
-        // インターバルで呼ばれる
-//        @Override
-//        public void onTick(long millisUntilFinished) {
-//            // 奇数回目の場合はボタンを点灯
-//            // 偶数回目の場合はボタンを消灯
-//            if (mCountOnTick % 2 != 0) {
-//                Random random = new Random();
-//                lightButton = random.nextInt(9);
-//
-//                mBtList[lightButton].setBackgroundColor(Color.parseColor("#99CCFF"));
-//            } else {
-//                mBtList[lightButton].setBackgroundResource(R.drawable.button_style);
-//            }
-//
-//            mCountOnTick++;
-//            mMainText.setText(mCountOnTick);
+                mHandler.postDelayed(buttonOffRunnable, 500);
+            }
+        };
+
+        Runnable buttonOffRunnable = new Runnable() {
+            @Override
+            public void run() {
+                mBtList[mActiveButton].setBackgroundResource(R.drawable.button_style);
+
+                if (mQuestionNum == 0) {
+                    answerQuestion();
+                } else {
+                    mHandler.postDelayed(buttonOnRunnable, 500);
+                    mQuestionNum--;
+                }
+            }
+        };
     }
 }
