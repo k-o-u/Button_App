@@ -12,22 +12,21 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Random;
 
 public class GameActivity extends AppCompatActivity {
     private TextView mMainText;
     private Button[] mBtList = new Button[9];
-    private List<Integer> mQuestionList = new ArrayList<>();
-    private boolean startQuestion = false;
+    private Queue<Integer> queue = new ArrayDeque<>();
+    private  Question question;
     private int mCount = 4;
-    // 正解数
+    // 正解した問題数
     private int mAnswer = 0;
-    // 点灯しているボタンを記憶
-    private int mActiveButton;
 
-    private HandlerThread mHandlerThread;
     private Handler mHandler;
 
     private Runnable runnable;
@@ -60,7 +59,7 @@ public class GameActivity extends AppCompatActivity {
         // 全ボタンを無効化
         setButtonDisable(mBtList);
 
-        Question question = new Question();
+        question = new Question();
 
         // スタートまでカウントダウン
         mHandler = new Handler(Looper.getMainLooper());
@@ -123,9 +122,35 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
+    public void onAnswer(View view) {
+        Button button = findViewById(view.getId());
+        Button answer = mBtList[queue.poll()];
+
+        if (answer != button) {
+            mMainText.setText("不正解です");
+            setButtonDisable(mBtList);
+        }
+
+        if (queue.size() == 0) {
+            mMainText.setText("正解!!");
+            setButtonDisable(mBtList);
+            mAnswer++;
+
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+
+            }
+
+            question.startQuestion();
+        }
+    }
+
     class Question {
-//        private int mQuestionNum = mAnswer;
-        private int mQuestionNum = 3;
+        private int mQuestionNum = mAnswer;
+//        private int mQuestionNum = 3;
+        // 点灯しているボタンを記憶
+        private int mActiveButton;
 
         public void startQuestion() {
             mHandler.post(buttonOnRunnable);
@@ -140,6 +165,7 @@ public class GameActivity extends AppCompatActivity {
             @Override
             public void run() {
                 mActiveButton = random.nextInt(9);
+                queue.add(mActiveButton);
                 mBtList[mActiveButton].setBackgroundColor(Color.parseColor("#99CCFF"));
 
                 mHandler.postDelayed(buttonOffRunnable, 500);
