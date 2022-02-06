@@ -74,7 +74,7 @@ public class GameActivity extends AppCompatActivity {
                     mMainText.setText("");
                     mHandler.removeCallbacks(runnable);
                     // 出題
-                    question.startQuestion();
+                    question.startQuestion(0);
                 }
             }
         };
@@ -127,33 +127,27 @@ public class GameActivity extends AppCompatActivity {
         Button answer = mBtList[queue.poll()];
 
         if (answer != button) {
-            mMainText.setText("不正解です");
+            mMainText.setText("不正解です\n正解数：" + mAnswer);
             setButtonDisable(mBtList);
-        }
-
-        if (queue.size() == 0) {
-            mMainText.setText("正解!!");
-            setButtonDisable(mBtList);
-            mAnswer++;
-
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-
+        } else {
+            if (queue.size() == 0) {
+                mMainText.setText("正解!!");
+                setButtonDisable(mBtList);
+                mAnswer++;
+                question.startQuestion(2000);
             }
-
-            question.startQuestion();
         }
     }
 
     class Question {
-        private int mQuestionNum = mAnswer;
+        private int mQuestionNum;
 //        private int mQuestionNum = 3;
         // 点灯しているボタンを記憶
         private int mActiveButton;
 
-        public void startQuestion() {
-            mHandler.post(buttonOnRunnable);
+        public void startQuestion(int delay) {
+            setQuestionNum();
+            mHandler.postDelayed(buttonOnRunnable, delay);
         }
 
         public void answerQuestion() {
@@ -161,9 +155,15 @@ public class GameActivity extends AppCompatActivity {
             setButtonEnable(mBtList);
         }
 
+        public void setQuestionNum() {
+            mQuestionNum = mAnswer;
+        }
+
+        // ボタンをランダムに光らせる
         Runnable buttonOnRunnable = new Runnable() {
             @Override
             public void run() {
+                mMainText.setText("");
                 mActiveButton = random.nextInt(9);
                 queue.add(mActiveButton);
                 mBtList[mActiveButton].setBackgroundColor(Color.parseColor("#99CCFF"));
@@ -172,6 +172,7 @@ public class GameActivity extends AppCompatActivity {
             }
         };
 
+        // 点灯しているボタンを消灯する
         Runnable buttonOffRunnable = new Runnable() {
             @Override
             public void run() {
